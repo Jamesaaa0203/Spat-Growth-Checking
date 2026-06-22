@@ -34,7 +34,6 @@
         .gas-input:focus { border-color:var(--accent); }
         .icon-btn { width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--surface-2); border:1px solid var(--border); color:var(--text-mut); }
         .pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; }
-        .spin { animation:spin 1s linear infinite; } @keyframes spin { to{transform:rotate(360deg);} }
     </style>
 </head>
 <body class="flex flex-col min-h-screen antialiased pb-12">
@@ -88,25 +87,29 @@
 
                 <div class="flex gap-2 items-end mb-3">
                     <div class="flex-1">
-                        <input type="number" step="0.01" inputmode="decimal" id="increment-sample-input" placeholder="Enter size in cm (e.g., 1.25)" class="gas-input">
+                        <input type="number" step="0.01" inputmode="decimal" id="increment-sample-input" placeholder="Ruler size in cm (e.g., 1.25)" class="gas-input">
                     </div>
                     <button onclick="addIncrementalSample()" style="background: var(--surface-2); border: 1px solid var(--border-2);" class="px-4 py-3 rounded-xl font-bold text-sm tracking-wide text-center shrink-0 active:scale-95 transition-transform">+ Add</button>
                 </div>
 
                 <div id="pills-container" class="flex flex-wrap gap-2 p-3 min-h-[60px] max-h-[140px] overflow-y-auto rounded-xl border border-dashed" style="background: var(--surface-2); border-color: var(--border-2);">
-                    <p id="pills-placeholder" class="text-xs self-center mx-auto text-slate-400">No samples entered yet. Add sizes above.</p>
+                    <p id="pills-placeholder" class="text-xs self-center mx-auto text-slate-400">No sizes entered yet. Add values above.</p>
                 </div>
             </div>
 
             <div class="p-4 rounded-xl border" style="background: color-mix(in srgb, var(--accent) 8%, transparent); border-color: color-mix(in srgb, var(--accent) 25%, transparent);">
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                        <span style="color: var(--text-mut);">Samples Logged:</span>
-                        <div class="num text-base font-bold" id="calc-count" style="color: var(--text);">0 pcs</div>
+                <div class="grid grid-cols-3 gap-2 text-xs text-center">
+                    <div class="border-r border-slate-300 dark:border-slate-700">
+                        <span style="color: var(--text-mut);">Samples</span>
+                        <div class="num text-sm font-bold" id="calc-count" style="color: var(--text);">0 pcs</div>
+                    </div>
+                    <div class="border-r border-slate-300 dark:border-slate-700">
+                        <span style="color: var(--text-mut);">Avg Size</span>
+                        <div class="num text-sm font-bold" id="calc-avg-size" style="color: var(--ok);">0.00 cm</div>
                     </div>
                     <div>
-                        <span style="color: var(--text-mut);">Calculated Avg Weight:</span>
-                        <div class="num text-base font-bold" id="calc-avg-weight" style="color: var(--text);">0.000 g</div>
+                        <span style="color: var(--text-mut);">Avg Weight</span>
+                        <div class="num text-sm font-bold" id="calc-avg-weight" style="color: var(--text);">0.000 g</div>
                     </div>
                 </div>
             </div>
@@ -137,23 +140,30 @@
         document.getElementById('log-date').valueAsDate = new Date();
 
         // Catch enter key inside length field
-        document.getElementById('increment-sample-input').addEventListener('keypress', function(e) {
+        const inputField = document.getElementById('increment-sample-input');
+        inputField.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 addIncrementalSample();
             }
         });
 
-        // Incremental Entry Mode Logic
+        // Incremental Entry Mode Logic with safety bounds check (0.1cm to 10.0cm)
         function addIncrementalSample() {
-            const inputEl = document.getElementById('increment-sample-input');
-            const val = parseFloat(inputEl.value);
+            const val = parseFloat(inputField.value);
             
-            if (!val || val <= 0) return;
+            if (isNaN(val) || val <= 0) return;
+            
+            if (val < 0.1 || val > 10.0) {
+                alert("Sila periksa saiz. Nilai mestilah di antara 0.1 cm dan 10.0 cm.");
+                return;
+            }
             
             sampleLengths.push(val);
-            inputEl.value = '';
-            inputEl.focus();
+            inputField.value = '';
+            
+            // Refinement: Instant continuous auto-focus loop for high-speed typing
+            inputField.focus();
 
             rumbleDevice(25);
             updatePillTray();
@@ -163,6 +173,7 @@
             sampleLengths.splice(index, 1);
             rumbleDevice(35);
             updatePillTray();
+            inputField.focus();
         }
 
         function updatePillTray() {
@@ -170,7 +181,6 @@
             const placeholder = document.getElementById('pills-placeholder');
             const pillCount = document.getElementById('pill-count');
             
-            // Clear prior dynamic pills
             container.querySelectorAll('.dynamic-pill').forEach(el => el.remove());
 
             if (sampleLengths.length === 0) {
@@ -196,6 +206,14 @@
             const count = sampleLengths.length;
             document.getElementById('calc-count').textContent = `${count} pcs`;
 
+            // Dynamic running average size calculations (cm)
+            if (count > 0) {
+                const totalSum = sampleLengths.reduce((sum, val) => sum + val, 0);
+                document.getElementById('calc-avg-size').textContent = `${(totalSum / count).toFixed(2)} cm`;
+            } else {
+                document.getElementById('calc-avg-size').textContent = '0.00 cm';
+            }
+
             const totalWeight = parseFloat(document.getElementById('log-sample-weight').value) || 0;
             if (count > 0 && totalWeight > 0) {
                 document.getElementById('calc-avg-weight').textContent = `${(totalWeight / count).toFixed(3)} g`;
@@ -206,7 +224,6 @@
 
         document.getElementById('log-sample-weight').addEventListener('input', runLiveCalculations);
 
-        // Submit Payload to Google Sheet API Endpoint
         function submitSpatData() {
             const btn = document.getElementById('submit-btn');
             const date = document.getElementById('log-date').value;
@@ -228,7 +245,7 @@
                 tankId: tankId,
                 totalSpat: parseInt(totalSpat),
                 sampleWeight: parseFloat(sampleWeight),
-                rawLengths: sampleLengths.join(', ') // Formats cleanly as: "1.25, 1.30, 0.95"
+                rawLengths: sampleLengths.join(', ')
             };
 
             fetch(SCRIPT_URL, {
@@ -241,7 +258,6 @@
                 rumbleDevice([60, 40, 60]);
                 alert("Data Successfully Logged to Master Template Sheet! ✓");
                 
-                // Clear out entries, ready for consecutive tank sampling workflow
                 document.getElementById('log-total-spat').value = '';
                 document.getElementById('log-sample-weight').value = '';
                 sampleLengths = [];
