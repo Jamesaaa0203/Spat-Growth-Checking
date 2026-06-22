@@ -82,13 +82,13 @@
 
             <div class="border-t pt-4 dark:border-slate-700">
                 <div class="flex justify-between items-center mb-2">
-                    <span class="eyebrow" style="color: var(--ok);">Incremental Measurements (mm)</span>
+                    <span class="eyebrow" style="color: var(--ok);">Incremental Measurements (cm)</span>
                     <span class="num text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500" id="pill-count">0 samples</span>
                 </div>
 
                 <div class="flex gap-2 items-end mb-3">
                     <div class="flex-1">
-                        <input type="number" step="0.1" inputmode="decimal" id="increment-sample-input" placeholder="Enter single size (e.g., 1.2)" class="gas-input">
+                        <input type="number" step="0.01" inputmode="decimal" id="increment-sample-input" placeholder="Enter size in cm (e.g., 1.25)" class="gas-input">
                     </div>
                     <button onclick="addIncrementalSample()" style="background: var(--surface-2); border: 1px solid var(--border-2);" class="px-4 py-3 rounded-xl font-bold text-sm tracking-wide text-center shrink-0 active:scale-95 transition-transform">+ Add</button>
                 </div>
@@ -118,7 +118,7 @@
     </main>
 
     <script>
-        // 1. INPUT YOUR GOOGLE APPS SCRIPT API DEPLOYMENT LINK HERE
+        // INPUT YOUR GOOGLE APPS SCRIPT API DEPLOYMENT LINK HERE
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxQukehQDiY-9OUJFN-7i0E3BTDfcah6XE8Xsbnjc1BrRyfb6zAc9ARObnLxcqEzVW7g/exec";
 
         let sampleLengths = [];
@@ -185,7 +185,7 @@
                     pill.className = 'pill dynamic-pill';
                     pill.style.backgroundColor = 'color-mix(in srgb, var(--accent) 12%, transparent)';
                     pill.style.color = 'var(--accent)';
-                    pill.innerHTML = `#${idx + 1}: ${len.toFixed(1)}mm <button onclick="removeIncrementalSample(${idx})" class="ml-1 font-bold text-red-500 hover:text-red-700 px-1">×</button>`;
+                    pill.innerHTML = `#${idx + 1}: ${len.toFixed(2)} cm <button onclick="removeIncrementalSample(${idx})" class="ml-1 font-bold text-red-500 hover:text-red-700 px-1">×</button>`;
                     container.appendChild(pill);
                 });
             }
@@ -228,7 +228,7 @@
                 tankId: tankId,
                 totalSpat: parseInt(totalSpat),
                 sampleWeight: parseFloat(sampleWeight),
-                rawLengths: sampleLengths.join(', ') // Formats cleanly into: "1.1, 1.2, 0.9"
+                rawLengths: sampleLengths.join(', ') // Formats cleanly as: "1.25, 1.30, 0.95"
             };
 
             fetch(SCRIPT_URL, {
@@ -257,7 +257,6 @@
             });
         }
 
-        // Structural UI Utility Fns
         function cycleTheme() {
             rumbleDevice(30);
             document.body.classList.toggle('dark');
