@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spat Growth Data Logger</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --background: #f4f6f9;
+            --text: #333;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        h2 {
+            margin-top: 0;
+            color: #111;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+        }
+        .hint {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 4px;
+        }
+        .live-calc {
+            background: #e6f2ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        #statusMessage {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h2>Spat Growth Logging Form</h2>
+    <form id="loggingForm">
+        <div class="form-group">
+            <label for="date">Date of Sampling</label>
+            <input type="date" id="date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="tankId">Tank ID</label>
+            <select id="tankId" required>
+                <option value="">-- Select Tank --</option>
+                </select>
+        </div>
+
+        <div class="form-group">
+            <label for="totalSpat">Total No. of Spat in Tank</label>
+            <input type="number" id="totalSpat" placeholder="e.g. 5000" required min="1">
+        </div>
+
+        <div class="form-group">
+            <label for="sampleWeight">Weight of Sample (grams)</label>
+            <input type="number" step="0.01" id="sampleWeight" placeholder="e.g. 21.5" required min="0.01">
+        </div>
+
+        <div class="form-group">
+            <label for="rawLengths">Spat Length Measurements (cm)</label>
+            <textarea id="rawLengths" rows="3" placeholder="1.1, 1.3, 0.9, 1.2" required></textarea>
+            <div class="hint">Type individual measurements separated by commas.</div>
+        </div>
+
+        <div class="live-calc">
+            Samples Counted: <span id="calcCount">0</span> pcs<br>
+            Estimated Avg Weight: <span id="calcAvgWeight">0.00</span> g
+        </div>
+
+        <button type="submit" id="submitBtn">Submit Data</button>
+    </form>
+    
+    <div id="statusMessage"></div>
+</div>
+
+<script>
+    // 1. PLACE YOUR GOOGLE DEPLOYMENT ENDPOINT LINK HERE
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxQukehQDiY-9OUJFN-7i0E3BTDfcah6XE8Xsbnjc1BrRyfb6zAc9ARObnLxcqEzVW7g/exec";
+
+    // Auto-populate the 80 tank options
+    const tankSelect = document.getElementById('tankId');
+    for (let i = 1; i <= 80; i++) {
+        let tankNum = i < 10 ? '0' + i : i;
+        let option = document.createElement('option');
+        option.value = `Tank ${tankNum}`;
+        option.textContent = `Tank ${tankNum}`;
+        tankSelect.appendChild(option);
+    }
+
+    // Default form date to today
+    document.getElementById('date').valueAsDate = new Date();
+
+    // Live calculation of sample count and average weight as the worker types
+    const rawLengthsInput = document.getElementById('rawLengths');
+    const sampleWeightInput = document.getElementById('sampleWeight');
+    const calcCount = document.getElementById('calcCount');
+    const calcAvgWeight = document.getElementById('calcAvgWeight');
+
+    function updateLiveCalculations() {
+        const text = rawLengthsInput.value.trim();
+        if (!text) {
+            calcCount.textContent = "0";
+            calcAvgWeight.textContent = "0.00";
+            return;
+        }
+        
+        // Split by commas and filter out any empty array items
+        const samples = text.split(',').map(s => s.trim()).filter(s => s.length > 0 && !isNaN(s));
+        const count = samples.length;
+        calcCount.textContent = count;
+
+        const weight = parseFloat(sampleWeightInput.value) || 0;
+        if (count > 0 && weight > 0) {
+            calcAvgWeight.textContent = (weight / count).toFixed(2);
+        } else {
+            calcAvgWeight.textContent = "0.00";
+        }
+    }
+
+    rawLengthsInput.addEventListener('input', updateLiveCalculations);
+    sampleWeightInput.addEventListener('input', updateLiveCalculations);
+
+    // Handle Form Submit Event
+    document.getElementById('loggingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMsg = document.getElementById('statusMessage');
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Uploading...";
+        statusMsg.style.display = "none";
+
+        const payload = {
+            date: document.getElementById('date').value,
+            tankId: document.getElementById('tankId').value,
+            totalSpat: parseInt(document.getElementById('totalSpat').value),
+            sampleWeight: parseFloat(document.getElementById('sampleWeight').value),
+            rawLengths: rawLengthsInput.value
+        };
+
+        // Post data to Google Apps Script Web App Endpoint
+        fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors", // Required to bypass CORS redirect handling from Google Script
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            statusMsg.style.backgroundColor = "#d4edda";
+            statusMsg.style.color = "#155724";
+            statusMsg.style.display = "block";
+            statusMsg.textContent = "Data Successfully Logged to Spreadsheet!";
+            
+            // Reset fields except date and tank for consecutive entry workflow convenience
+            document.getElementById('totalSpat').value = '';
+            document.getElementById('sampleWeight').value = '';
+            rawLengthsInput.value = '';
+            updateLiveCalculations();
+        })
+        .catch(err => {
+            statusMsg.style.backgroundColor = "#f8d7da";
+            statusMsg.style.color = "#721c24";
+            statusMsg.style.display = "block";
+            statusMsg.textContent = "Error saving data. Please try again.";
+            console.error(err);
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Data";
+        });
+    });
+</script>
+
+</body>
+</html>
