@@ -2,243 +2,276 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spat Growth Data Logger</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#F2EEE8">
+    <title>Bon Aqua — Spat Growth Logger</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #007bff;
-            --success: #28a745;
-            --background: #f4f6f9;
-            --text: #333;
+            --bg:#EAEFF5; --bg-soft:#F4F7FB; --surface:#FFFFFF; --surface-2:#F6F9FC;
+            --border:#DCE4EE; --border-2:#C8D4E2; --text:#0B1B33; --text-mut:#5B6B82; --text-dim:#8896A8;
+            --accent:#0EA5E9; --ok:#0D9488; --attention:#D97706; --alert:#E11D48;
+            --shadow:0 1px 2px rgba(13,28,58,.06), 0 8px 24px -12px rgba(13,28,58,.18);
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--background);
-            color: var(--text);
-            margin: 0;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
+        body.dark {
+            --bg:#08101F; --bg-soft:#0A1428; --surface:#0F1B38; --surface-2:#0C1730;
+            --border:#1E2F50; --border-2:#2A3F66; --text:#EAF1FA; --text-mut:#93A3BD; --text-dim:#64748B;
+            --accent:#38BDF8; --ok:#2DD4BF; --attention:#F59E0B; --alert:#FB7185;
+            --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -20px rgba(0,0,0,.7);
         }
-        .app-container {
-            width: 100%;
-            max-width: 500px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-        h2 {
-            margin-top: 0;
-            color: #111;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
-        }
-        .hint {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 4px;
-        }
-        .live-calc {
-            background: #e6f2ff;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:disabled {
-            background-color: #ccc;
-        }
-        #statusMessage {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-            font-weight: bold;
-            display: none;
-        }
+        * { -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; transition:background-color .4s,color .4s; }
+        h1,h2,h3,h4,.num { font-family:'Space Grotesk','Inter',sans-serif; }
+        .eyebrow { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--text-dim); }
+        .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
+        .wordmark { font-weight:700; letter-spacing:-.02em; font-size:19px; line-height:1; }
+        .wordmark .sub { color:var(--accent); }
+        .gas-input { width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:11px 14px; font-size:14px; color:var(--text); outline:none; transition:border-color .2s; }
+        .gas-input:focus { border-color:var(--accent); }
+        .icon-btn { width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--surface-2); border:1px solid var(--border); color:var(--text-mut); }
+        .pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; }
+        .spin { animation:spin 1s linear infinite; } @keyframes spin { to{transform:rotate(360deg);} }
     </style>
 </head>
-<body>
+<body class="flex flex-col min-h-screen antialiased pb-12">
 
-<div class="app-container">
-    <h2>Spat Growth Logging Form</h2>
-    <form id="loggingForm">
-        <div class="form-group">
-            <label for="date">Date of Sampling</label>
-            <input type="date" id="date" required>
+    <header class="sticky top-0 z-40 px-4 py-3 flex justify-between items-center"
+            style="background:color-mix(in srgb,var(--surface) 90%,transparent); backdrop-filter:saturate(1.4) blur(14px); -webkit-backdrop-filter:saturate(1.4) blur(14px); border-bottom:1px solid var(--border); padding-top:calc(.75rem + env(safe-area-inset-top));">
+        <div class="flex items-center gap-2.5">
+            <div class="wordmark">Bon Aqua <span class="sub">Ops</span></div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="cycleTheme()" class="icon-btn text-xs font-bold" id="theme-btn" title="Toggle theme">🌗</button>
+            <div class="chip px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-xs"><span class="num" id="live-clock">00:00</span></div>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 space-y-4 max-w-md mx-auto w-full">
+        <div class="flex items-center justify-between px-1 pt-1">
+            <span class="eyebrow">Spat Log · Modul Tumbuh</span>
+            <span class="eyebrow" style="color:var(--text-mut);">Tank 01 – 80</span>
         </div>
 
-        <div class="form-group">
-            <label for="tankId">Tank ID</label>
-            <select id="tankId" required>
-                <option value="">-- Select Tank --</option>
+        <div class="card p-6 space-y-5">
+            <div>
+                <label class="eyebrow block mb-1.5">Tarikh Persampelan / Date</label>
+                <input type="date" id="log-date" class="gas-input">
+            </div>
+
+            <div>
+                <label class="eyebrow block mb-1.5">Tank ID · No. Tangki</label>
+                <select id="log-tank" class="gas-input bg-right" style="background-color: var(--surface-2);">
+                    <option value="">-- Select Tank --</option>
                 </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="eyebrow block mb-1.5">Total Spats in Tank</label>
+                    <input type="number" inputmode="numeric" id="log-total-spat" placeholder="e.g. 5000" class="gas-input">
+                </div>
+                <div>
+                    <label class="eyebrow block mb-1.5">Sample Weight (g)</label>
+                    <input type="number" step="0.01" inputmode="decimal" id="log-sample-weight" placeholder="e.g. 21.5" class="gas-input">
+                </div>
+            </div>
+
+            <div class="border-t pt-4 dark:border-slate-700">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="eyebrow" style="color: var(--ok);">Incremental Measurements (mm)</span>
+                    <span class="num text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500" id="pill-count">0 samples</span>
+                </div>
+
+                <div class="flex gap-2 items-end mb-3">
+                    <div class="flex-1">
+                        <input type="number" step="0.1" inputmode="decimal" id="increment-sample-input" placeholder="Enter single size (e.g., 1.2)" class="gas-input">
+                    </div>
+                    <button onclick="addIncrementalSample()" style="background: var(--surface-2); border: 1px solid var(--border-2);" class="px-4 py-3 rounded-xl font-bold text-sm tracking-wide text-center shrink-0 active:scale-95 transition-transform">+ Add</button>
+                </div>
+
+                <div id="pills-container" class="flex flex-wrap gap-2 p-3 min-h-[60px] max-h-[140px] overflow-y-auto rounded-xl border border-dashed" style="background: var(--surface-2); border-color: var(--border-2);">
+                    <p id="pills-placeholder" class="text-xs self-center mx-auto text-slate-400">No samples entered yet. Add sizes above.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl border" style="background: color-mix(in srgb, var(--accent) 8%, transparent); border-color: color-mix(in srgb, var(--accent) 25%, transparent);">
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <span style="color: var(--text-mut);">Samples Logged:</span>
+                        <div class="num text-base font-bold" id="calc-count" style="color: var(--text);">0 pcs</div>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-mut);">Calculated Avg Weight:</span>
+                        <div class="num text-base font-bold" id="calc-avg-weight" style="color: var(--text);">0.000 g</div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="submit-btn" onclick="submitSpatData()" class="w-full py-3.5 text-sm font-semibold text-white rounded-xl active:scale-[0.98] transition-transform flex justify-center items-center gap-2" style="background: var(--accent);">
+                <span>🚀 Submit Data to Master Sheet</span>
+            </button>
         </div>
+    </main>
 
-        <div class="form-group">
-            <label for="totalSpat">Total No. of Spat in Tank</label>
-            <input type="number" id="totalSpat" placeholder="e.g. 5000" required min="1">
-        </div>
+    <script>
+        // 1. INPUT YOUR GOOGLE APPS SCRIPT API DEPLOYMENT LINK HERE
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxQukehQDiY-9OUJFN-7i0E3BTDfcah6XE8Xsbnjc1BrRyfb6zAc9ARObnLxcqEzVW7g/exec";
 
-        <div class="form-group">
-            <label for="sampleWeight">Weight of Sample (grams)</label>
-            <input type="number" step="0.01" id="sampleWeight" placeholder="e.g. 21.5" required min="0.01">
-        </div>
+        let sampleLengths = [];
 
-        <div class="form-group">
-            <label for="rawLengths">Spat Length Measurements (cm)</label>
-            <textarea id="rawLengths" rows="3" placeholder="1.1, 1.3, 0.9, 1.2" required></textarea>
-            <div class="hint">Type individual measurements separated by commas.</div>
-        </div>
-
-        <div class="live-calc">
-            Samples Counted: <span id="calcCount">0</span> pcs<br>
-            Estimated Avg Weight: <span id="calcAvgWeight">0.00</span> g
-        </div>
-
-        <button type="submit" id="submitBtn">Submit Data</button>
-    </form>
-    
-    <div id="statusMessage"></div>
-</div>
-
-<script>
-    // 1. PLACE YOUR GOOGLE DEPLOYMENT ENDPOINT LINK HERE
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxQukehQDiY-9OUJFN-7i0E3BTDfcah6XE8Xsbnjc1BrRyfb6zAc9ARObnLxcqEzVW7g/exec";
-
-    // Auto-populate the 80 tank options
-    const tankSelect = document.getElementById('tankId');
-    for (let i = 1; i <= 80; i++) {
-        let tankNum = i < 10 ? '0' + i : i;
-        let option = document.createElement('option');
-        option.value = `Tank ${tankNum}`;
-        option.textContent = `Tank ${tankNum}`;
-        tankSelect.appendChild(option);
-    }
-
-    // Default form date to today
-    document.getElementById('date').valueAsDate = new Date();
-
-    // Live calculation of sample count and average weight as the worker types
-    const rawLengthsInput = document.getElementById('rawLengths');
-    const sampleWeightInput = document.getElementById('sampleWeight');
-    const calcCount = document.getElementById('calcCount');
-    const calcAvgWeight = document.getElementById('calcAvgWeight');
-
-    function updateLiveCalculations() {
-        const text = rawLengthsInput.value.trim();
-        if (!text) {
-            calcCount.textContent = "0";
-            calcAvgWeight.textContent = "0.00";
-            return;
+        // Generate Tank IDs (Tank 01 to Tank 80)
+        const tankSelect = document.getElementById('log-tank');
+        for (let i = 1; i <= 80; i++) {
+            let tankNum = i < 10 ? '0' + i : i;
+            let option = document.createElement('option');
+            option.value = `Tank ${tankNum}`;
+            option.textContent = `Tank ${tankNum}`;
+            tankSelect.appendChild(option);
         }
-        
-        // Split by commas and filter out any empty array items
-        const samples = text.split(',').map(s => s.trim()).filter(s => s.length > 0 && !isNaN(s));
-        const count = samples.length;
-        calcCount.textContent = count;
 
-        const weight = parseFloat(sampleWeightInput.value) || 0;
-        if (count > 0 && weight > 0) {
-            calcAvgWeight.textContent = (weight / count).toFixed(2);
-        } else {
-            calcAvgWeight.textContent = "0.00";
-        }
-    }
+        // Set default sampling date to today
+        document.getElementById('log-date').valueAsDate = new Date();
 
-    rawLengthsInput.addEventListener('input', updateLiveCalculations);
-    sampleWeightInput.addEventListener('input', updateLiveCalculations);
-
-    // Handle Form Submit Event
-    document.getElementById('loggingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const submitBtn = document.getElementById('submitBtn');
-        const statusMsg = document.getElementById('statusMessage');
-        
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Uploading...";
-        statusMsg.style.display = "none";
-
-        const payload = {
-            date: document.getElementById('date').value,
-            tankId: document.getElementById('tankId').value,
-            totalSpat: parseInt(document.getElementById('totalSpat').value),
-            sampleWeight: parseFloat(document.getElementById('sampleWeight').value),
-            rawLengths: rawLengthsInput.value
-        };
-
-        // Post data to Google Apps Script Web App Endpoint
-        fetch(SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors", // Required to bypass CORS redirect handling from Google Script
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            statusMsg.style.backgroundColor = "#d4edda";
-            statusMsg.style.color = "#155724";
-            statusMsg.style.display = "block";
-            statusMsg.textContent = "Data Successfully Logged to Spreadsheet!";
-            
-            // Reset fields except date and tank for consecutive entry workflow convenience
-            document.getElementById('totalSpat').value = '';
-            document.getElementById('sampleWeight').value = '';
-            rawLengthsInput.value = '';
-            updateLiveCalculations();
-        })
-        .catch(err => {
-            statusMsg.style.backgroundColor = "#f8d7da";
-            statusMsg.style.color = "#721c24";
-            statusMsg.style.display = "block";
-            statusMsg.textContent = "Error saving data. Please try again.";
-            console.error(err);
-        })
-        .finally(() => {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "Submit Data";
+        // Catch enter key inside length field
+        document.getElementById('increment-sample-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addIncrementalSample();
+            }
         });
-    });
-</script>
 
+        // Incremental Entry Mode Logic
+        function addIncrementalSample() {
+            const inputEl = document.getElementById('increment-sample-input');
+            const val = parseFloat(inputEl.value);
+            
+            if (!val || val <= 0) return;
+            
+            sampleLengths.push(val);
+            inputEl.value = '';
+            inputEl.focus();
+
+            rumbleDevice(25);
+            updatePillTray();
+        }
+
+        function removeIncrementalSample(index) {
+            sampleLengths.splice(index, 1);
+            rumbleDevice(35);
+            updatePillTray();
+        }
+
+        function updatePillTray() {
+            const container = document.getElementById('pills-container');
+            const placeholder = document.getElementById('pills-placeholder');
+            const pillCount = document.getElementById('pill-count');
+            
+            // Clear prior dynamic pills
+            container.querySelectorAll('.dynamic-pill').forEach(el => el.remove());
+
+            if (sampleLengths.length === 0) {
+                placeholder.style.display = 'block';
+                pillCount.textContent = '0 samples';
+            } else {
+                placeholder.style.display = 'none';
+                pillCount.textContent = `${sampleLengths.length} sample${sampleLengths.length > 1 ? 's' : ''}`;
+                
+                sampleLengths.forEach((len, idx) => {
+                    const pill = document.createElement('span');
+                    pill.className = 'pill dynamic-pill';
+                    pill.style.backgroundColor = 'color-mix(in srgb, var(--accent) 12%, transparent)';
+                    pill.style.color = 'var(--accent)';
+                    pill.innerHTML = `#${idx + 1}: ${len.toFixed(1)}mm <button onclick="removeIncrementalSample(${idx})" class="ml-1 font-bold text-red-500 hover:text-red-700 px-1">×</button>`;
+                    container.appendChild(pill);
+                });
+            }
+            runLiveCalculations();
+        }
+
+        function runLiveCalculations() {
+            const count = sampleLengths.length;
+            document.getElementById('calc-count').textContent = `${count} pcs`;
+
+            const totalWeight = parseFloat(document.getElementById('log-sample-weight').value) || 0;
+            if (count > 0 && totalWeight > 0) {
+                document.getElementById('calc-avg-weight').textContent = `${(totalWeight / count).toFixed(3)} g`;
+            } else {
+                document.getElementById('calc-avg-weight').textContent = '0.000 g';
+            }
+        }
+
+        document.getElementById('log-sample-weight').addEventListener('input', runLiveCalculations);
+
+        // Submit Payload to Google Sheet API Endpoint
+        function submitSpatData() {
+            const btn = document.getElementById('submit-btn');
+            const date = document.getElementById('log-date').value;
+            const tankId = document.getElementById('log-tank').value;
+            const totalSpat = document.getElementById('log-total-spat').value;
+            const sampleWeight = document.getElementById('log-sample-weight').value;
+
+            if (!tankId || !totalSpat || !sampleWeight || sampleLengths.length === 0) {
+                alert("Sila isi semua ruangan dan masukkan sekurang-kurangnya satu saiz sampel.");
+                return;
+            }
+
+            rumbleDevice(50);
+            btn.disabled = true;
+            btn.innerHTML = `<span>⏳ Uploading Logs...</span>`;
+
+            const payload = {
+                date: date,
+                tankId: tankId,
+                totalSpat: parseInt(totalSpat),
+                sampleWeight: parseFloat(sampleWeight),
+                rawLengths: sampleLengths.join(', ') // Formats cleanly into: "1.1, 1.2, 0.9"
+            };
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                rumbleDevice([60, 40, 60]);
+                alert("Data Successfully Logged to Master Template Sheet! ✓");
+                
+                // Clear out entries, ready for consecutive tank sampling workflow
+                document.getElementById('log-total-spat').value = '';
+                document.getElementById('log-sample-weight').value = '';
+                sampleLengths = [];
+                updatePillTray();
+            })
+            .catch(err => {
+                alert("Error connecting to sheet server. Check connection or Apps Script URL config.");
+                console.error(err);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<span>🚀 Submit Data to Master Sheet</span>`;
+            });
+        }
+
+        // Structural UI Utility Fns
+        function cycleTheme() {
+            rumbleDevice(30);
+            document.body.classList.toggle('dark');
+        }
+
+        function rumbleDevice(d) {
+            if ('vibrate' in navigator) navigator.vibrate(d);
+        }
+
+        setInterval(() => {
+            const d = new Date();
+            document.getElementById('live-clock').textContent = d.toTimeString().substring(0, 5);
+        }, 1000);
+        document.getElementById('live-clock').textContent = new Date().toTimeString().substring(0, 5);
+    </script>
 </body>
 </html>
