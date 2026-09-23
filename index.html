@@ -4,289 +4,208 @@
     <meta charset="UTF-8">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#F2EEE8">
-    <title>Bon Aqua — Spat Growth Logger</title>
+    <meta name="theme-color" content="#EAEFF5">
+    <title>Bon Aqua — Shell Length Logger</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg:#EAEFF5; --bg-soft:#F4F7FB; --surface:#FFFFFF; --surface-2:#F6F9FC;
+            --bg:#EAEFF5; --surface:#FFFFFF; --surface-2:#F6F9FC;
             --border:#DCE4EE; --border-2:#C8D4E2; --text:#0B1B33; --text-mut:#5B6B82; --text-dim:#8896A8;
-            --accent:#0EA5E9; --ok:#0D9488; --attention:#D97706; --alert:#E11D48;
+            --accent:#0EA5E9; --ok:#0D9488; --alert:#E11D48;
             --shadow:0 1px 2px rgba(13,28,58,.06), 0 8px 24px -12px rgba(13,28,58,.18);
         }
         body.dark {
-            --bg:#08101F; --bg-soft:#0A1428; --surface:#0F1B38; --surface-2:#0C1730;
+            --bg:#08101F; --surface:#0F1B38; --surface-2:#0C1730;
             --border:#1E2F50; --border-2:#2A3F66; --text:#EAF1FA; --text-mut:#93A3BD; --text-dim:#64748B;
-            --accent:#38BDF8; --ok:#2DD4BF; --attention:#F59E0B; --alert:#FB7185;
+            --accent:#38BDF8; --ok:#2DD4BF; --alert:#FB7185;
             --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -20px rgba(0,0,0,.7);
         }
         * { -webkit-tap-highlight-color:transparent; box-sizing:border-box; }
         body { background:var(--bg); color:var(--text); font-family:'Inter',system-ui,sans-serif; transition:background-color .4s,color .4s; }
-        h1,h2,h3,h4,.num { font-family:'Space Grotesk','Inter',sans-serif; }
+        h1,h2,h3,.num { font-family:'Space Grotesk','Inter',sans-serif; }
         .eyebrow { font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--text-dim); }
         .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); }
         .wordmark { font-weight:700; letter-spacing:-.02em; font-size:19px; line-height:1; }
         .wordmark .sub { color:var(--accent); }
-        .gas-input { width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:11px 14px; font-size:14px; color:var(--text); outline:none; transition:border-color .2s; }
+        .gas-input { width:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:11px 14px; font-size:16px; color:var(--text); outline:none; transition:border-color .2s; }
         .gas-input:focus { border-color:var(--accent); }
         .icon-btn { width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--surface-2); border:1px solid var(--border); color:var(--text-mut); }
-        .pill { font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:6px; }
+        .pill { font-size:12px; font-weight:700; padding:4px 6px 4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;
+                background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); }
+        .pill button { color:var(--alert); font-weight:700; padding:0 6px; font-size:14px; line-height:1; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen antialiased pb-12">
 
     <header class="sticky top-0 z-40 px-4 py-3 flex justify-between items-center"
-            style="background:color-mix(in srgb,var(--surface) 90%,transparent); backdrop-filter:saturate(1.4) blur(14px); -webkit-backdrop-filter:saturate(1.4) blur(14px); border-bottom:1px solid var(--border); padding-top:calc(.75rem + env(safe-area-inset-top));">
-        <div class="flex items-center gap-2.5">
-            <div class="wordmark">Bon Aqua <span class="sub">Ops</span></div>
-        </div>
+            style="background:color-mix(in srgb,var(--surface) 90%,transparent); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--border); padding-top:calc(.75rem + env(safe-area-inset-top));">
+        <div class="wordmark">Bon Aqua <span class="sub">Ops</span></div>
         <div class="flex items-center gap-2">
-            <button onclick="cycleTheme()" class="icon-btn text-xs font-bold" id="theme-btn" title="Toggle theme">🌗</button>
-            <div class="chip px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-xs"><span class="num" id="live-clock">00:00</span></div>
+            <button onclick="toggleTheme()" class="icon-btn text-xs font-bold" title="Toggle theme">🌗</button>
+            <div class="px-3 py-1.5 rounded-full font-semibold text-xs" style="background:var(--surface-2); border:1px solid var(--border);"><span class="num" id="live-clock">00:00</span></div>
         </div>
     </header>
 
     <main class="flex-1 p-4 space-y-4 max-w-md mx-auto w-full">
         <div class="flex items-center justify-between px-1 pt-1">
-            <span class="eyebrow">Spat Log · Modul Tumbuh</span>
+            <span class="eyebrow">Shell Length · Panjang Cengkerang</span>
             <span class="eyebrow" style="color:var(--text-mut);">Tank 01 – 80</span>
         </div>
 
         <div class="card p-6 space-y-5">
-            <div>
-                <label class="eyebrow block mb-1.5">Tarikh Persampelan / Date</label>
-                <input type="date" id="log-date" class="gas-input">
-            </div>
-
-            <div>
-                <label class="eyebrow block mb-1.5">Tank ID · No. Tangki</label>
-                <select id="log-tank" class="gas-input bg-right" style="background-color: var(--surface-2);">
-                    <option value="">-- Select Tank --</option>
-                </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="eyebrow block mb-1.5">Total Spats in Tank</label>
-                    <input type="number" inputmode="numeric" id="log-total-spat" placeholder="e.g. 5000" class="gas-input">
+                    <label class="eyebrow block mb-1.5">Tarikh / Date</label>
+                    <input type="date" id="log-date" class="gas-input">
                 </div>
                 <div>
-                    <label class="eyebrow block mb-1.5">Sample Weight (g)</label>
-                    <input type="number" step="0.01" inputmode="decimal" id="log-sample-weight" placeholder="e.g. 21.5" class="gas-input">
+                    <label class="eyebrow block mb-1.5">No. Tangki / Tank</label>
+                    <select id="log-tank" class="gas-input">
+                        <option value="">-- Pilih --</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="border-t pt-4 dark:border-slate-700">
+            <div class="border-t pt-4" style="border-color:var(--border);">
                 <div class="flex justify-between items-center mb-2">
-                    <span class="eyebrow" style="color: var(--ok);">Incremental Measurements (cm)</span>
-                    <span class="num text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500" id="pill-count">0 samples</span>
+                    <span class="eyebrow" style="color:var(--ok);">Panjang / Length (cm)</span>
+                    <span class="num text-xs font-bold px-2 py-0.5 rounded-md" style="background:color-mix(in srgb,var(--ok) 12%,transparent); color:var(--ok);" id="pill-count">0 sampel</span>
                 </div>
 
                 <div class="flex gap-2 items-end mb-3">
-                    <div class="flex-1">
-                        <input type="number" step="0.01" inputmode="decimal" id="increment-sample-input" placeholder="Ruler size in cm (e.g., 1.25)" class="gas-input">
-                    </div>
-                    <button onclick="addIncrementalSample()" style="background: var(--surface-2); border: 1px solid var(--border-2);" class="px-4 py-3 rounded-xl font-bold text-sm tracking-wide text-center shrink-0 active:scale-95 transition-transform">+ Add</button>
+                    <input type="number" step="0.01" inputmode="decimal" id="length-input" placeholder="cth / e.g. 1.25" class="gas-input flex-1">
+                    <button onclick="addLength()" class="px-5 py-3 rounded-xl font-bold text-sm shrink-0 active:scale-95 transition-transform" style="background:var(--surface-2); border:1px solid var(--border-2);">+ Add</button>
                 </div>
 
-                <div id="pills-container" class="flex flex-wrap gap-2 p-3 min-h-[60px] max-h-[140px] overflow-y-auto rounded-xl border border-dashed" style="background: var(--surface-2); border-color: var(--border-2);">
-                    <p id="pills-placeholder" class="text-xs self-center mx-auto text-slate-400">No sizes entered yet. Add values above.</p>
+                <div id="pills-container" class="flex flex-wrap gap-2 p-3 min-h-[60px] max-h-[220px] overflow-y-auto rounded-xl border border-dashed" style="background:var(--surface-2); border-color:var(--border-2);">
+                    <p id="pills-placeholder" class="text-xs self-center mx-auto" style="color:var(--text-dim);">Belum ada saiz. Masukkan di atas.</p>
                 </div>
+
+                <button id="clear-btn" onclick="clearAll()" class="mt-2 text-xs font-semibold hidden" style="color:var(--alert);">Kosongkan semua / Clear all</button>
             </div>
 
-            <div class="p-4 rounded-xl border" style="background: color-mix(in srgb, var(--accent) 8%, transparent); border-color: color-mix(in srgb, var(--accent) 25%, transparent);">
-                <div class="grid grid-cols-3 gap-2 text-xs text-center">
-                    <div class="border-r border-slate-300 dark:border-slate-700">
-                        <span style="color: var(--text-mut);">Samples</span>
-                        <div class="num text-sm font-bold" id="calc-count" style="color: var(--text);">0 pcs</div>
-                    </div>
-                    <div class="border-r border-slate-300 dark:border-slate-700">
-                        <span style="color: var(--text-mut);">Avg Size</span>
-                        <div class="num text-sm font-bold" id="calc-avg-size" style="color: var(--ok);">0.00 cm</div>
-                    </div>
-                    <div>
-                        <span style="color: var(--text-mut);">Avg Weight</span>
-                        <div class="num text-sm font-bold" id="calc-avg-weight" style="color: var(--text);">0.000 g</div>
-                    </div>
-                </div>
-            </div>
-
-            <button id="submit-btn" onclick="submitSpatData()" class="w-full py-3.5 text-sm font-semibold text-white rounded-xl active:scale-[0.98] transition-transform flex justify-center items-center gap-2" style="background: var(--accent);">
-                <span>🚀 Submit Data to Master Sheet</span>
+            <button id="submit-btn" onclick="submitLengths()" class="w-full py-3.5 text-sm font-semibold text-white rounded-xl active:scale-[0.98] transition-transform flex justify-center items-center gap-2" style="background:var(--accent);">
+                <span>🚀 Hantar / Submit</span>
             </button>
         </div>
     </main>
 
     <script>
-        // INPUT YOUR GOOGLE APPS SCRIPT API DEPLOYMENT LINK HERE
+        // Google Apps Script web app URL
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxQukehQDiY-9OUJFN-7i0E3BTDfcah6XE8Xsbnjc1BrRyfb6zAc9ARObnLxcqEzVW7g/exec";
 
-        let sampleLengths = [];
+        const MIN_CM = 0.1, MAX_CM = 10.0;
+        let lengths = [];
 
-        // Generate Tank IDs (Tank 01 to Tank 80)
         const tankSelect = document.getElementById('log-tank');
+        const lengthInput = document.getElementById('length-input');
+
+        // Tank 01 - Tank 80
         for (let i = 1; i <= 80; i++) {
-            let tankNum = i < 10 ? '0' + i : i;
-            let option = document.createElement('option');
-            option.value = `Tank ${tankNum}`;
-            option.textContent = `Tank ${tankNum}`;
-            tankSelect.appendChild(option);
+            const id = `Tank ${String(i).padStart(2, '0')}`;
+            tankSelect.add(new Option(id, id));
         }
 
-        // Set default sampling date to today
-        document.getElementById('log-date').valueAsDate = new Date();
+        // Default date = today (local time)
+        function todayLocal() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        document.getElementById('log-date').value = todayLocal();
 
-        // Catch enter key inside length field
-        const inputField = document.getElementById('increment-sample-input');
-        inputField.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addIncrementalSample();
-            }
+        lengthInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') { e.preventDefault(); addLength(); }
         });
 
-        // Incremental Entry Mode Logic with safety bounds check (0.1cm to 10.0cm)
-        function addIncrementalSample() {
-            const val = parseFloat(inputField.value);
-            
-            if (isNaN(val) || val <= 0) return;
-            
-            if (val < 0.1 || val > 10.0) {
-                alert("Sila periksa saiz. Nilai mestilah di antara 0.1 cm dan 10.0 cm.");
+        function addLength() {
+            const val = parseFloat(lengthInput.value);
+            if (isNaN(val)) return;
+            if (val < MIN_CM || val > MAX_CM) {
+                alert(`Sila periksa saiz. Nilai mestilah di antara ${MIN_CM} cm dan ${MAX_CM} cm.`);
                 return;
             }
-            
-            sampleLengths.push(val);
-            inputField.value = '';
-            
-            // Refinement: Instant continuous auto-focus loop for high-speed typing
-            inputField.focus();
-
-            rumbleDevice(25);
-            updatePillTray();
+            lengths.push(Math.round(val * 100) / 100);
+            lengthInput.value = '';
+            lengthInput.focus();
+            vibrate(25);
+            render();
         }
 
-        function removeIncrementalSample(index) {
-            sampleLengths.splice(index, 1);
-            rumbleDevice(35);
-            updatePillTray();
-            inputField.focus();
+        function removeLength(i) {
+            lengths.splice(i, 1);
+            vibrate(35);
+            render();
+            lengthInput.focus();
         }
 
-        function updatePillTray() {
+        function clearAll() {
+            if (!confirm('Padam semua saiz? / Delete all lengths?')) return;
+            lengths = [];
+            render();
+        }
+
+        function render() {
             const container = document.getElementById('pills-container');
-            const placeholder = document.getElementById('pills-placeholder');
-            const pillCount = document.getElementById('pill-count');
-            
-            container.querySelectorAll('.dynamic-pill').forEach(el => el.remove());
+            container.querySelectorAll('.pill').forEach(el => el.remove());
+            document.getElementById('pills-placeholder').style.display = lengths.length ? 'none' : 'block';
+            document.getElementById('pill-count').textContent = `${lengths.length} sampel`;
+            document.getElementById('clear-btn').classList.toggle('hidden', lengths.length === 0);
 
-            if (sampleLengths.length === 0) {
-                placeholder.style.display = 'block';
-                pillCount.textContent = '0 samples';
-            } else {
-                placeholder.style.display = 'none';
-                pillCount.textContent = `${sampleLengths.length} sample${sampleLengths.length > 1 ? 's' : ''}`;
-                
-                sampleLengths.forEach((len, idx) => {
-                    const pill = document.createElement('span');
-                    pill.className = 'pill dynamic-pill';
-                    pill.style.backgroundColor = 'color-mix(in srgb, var(--accent) 12%, transparent)';
-                    pill.style.color = 'var(--accent)';
-                    pill.innerHTML = `#${idx + 1}: ${len.toFixed(2)} cm <button onclick="removeIncrementalSample(${idx})" class="ml-1 font-bold text-red-500 hover:text-red-700 px-1">×</button>`;
-                    container.appendChild(pill);
-                });
-            }
-            runLiveCalculations();
+            lengths.forEach((len, i) => {
+                const pill = document.createElement('span');
+                pill.className = 'pill';
+                pill.innerHTML = `#${i + 1}: ${len.toFixed(2)} <button onclick="removeLength(${i})">×</button>`;
+                container.appendChild(pill);
+            });
+            container.scrollTop = container.scrollHeight;
         }
 
-        function runLiveCalculations() {
-            const count = sampleLengths.length;
-            document.getElementById('calc-count').textContent = `${count} pcs`;
-
-            // Dynamic running average size calculations (cm)
-            if (count > 0) {
-                const totalSum = sampleLengths.reduce((sum, val) => sum + val, 0);
-                document.getElementById('calc-avg-size').textContent = `${(totalSum / count).toFixed(2)} cm`;
-            } else {
-                document.getElementById('calc-avg-size').textContent = '0.00 cm';
-            }
-
-            const totalWeight = parseFloat(document.getElementById('log-sample-weight').value) || 0;
-            if (count > 0 && totalWeight > 0) {
-                document.getElementById('calc-avg-weight').textContent = `${(totalWeight / count).toFixed(3)} g`;
-            } else {
-                document.getElementById('calc-avg-weight').textContent = '0.000 g';
-            }
-        }
-
-        document.getElementById('log-sample-weight').addEventListener('input', runLiveCalculations);
-
-        function submitSpatData() {
-            const btn = document.getElementById('submit-btn');
+        function submitLengths() {
             const date = document.getElementById('log-date').value;
-            const tankId = document.getElementById('log-tank').value;
-            const totalSpat = document.getElementById('log-total-spat').value;
-            const sampleWeight = document.getElementById('log-sample-weight').value;
+            const tankId = tankSelect.value;
 
-            if (!tankId || !totalSpat || !sampleWeight || sampleLengths.length === 0) {
-                alert("Sila isi semua ruangan dan masukkan sekurang-kurangnya satu saiz sampel.");
+            if (!date || !tankId || lengths.length === 0) {
+                alert('Sila pilih tarikh, tangki, dan masukkan sekurang-kurangnya satu saiz.');
                 return;
             }
+            if (!confirm(`Hantar ${lengths.length} saiz untuk ${tankId}?`)) return;
 
-            rumbleDevice(50);
+            const btn = document.getElementById('submit-btn');
             btn.disabled = true;
-            btn.innerHTML = `<span>⏳ Uploading Logs...</span>`;
-
-            const payload = {
-                date: date,
-                tankId: tankId,
-                totalSpat: parseInt(totalSpat),
-                sampleWeight: parseFloat(sampleWeight),
-                rawLengths: sampleLengths.join(', ')
-            };
+            btn.innerHTML = '<span>⏳ Menghantar...</span>';
+            vibrate(50);
 
             fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ date, tankId, lengths })
             })
             .then(() => {
-                rumbleDevice([60, 40, 60]);
-                alert("Data Successfully Logged to Master Template Sheet! ✓");
-                
-                document.getElementById('log-total-spat').value = '';
-                document.getElementById('log-sample-weight').value = '';
-                sampleLengths = [];
-                updatePillTray();
+                vibrate([60, 40, 60]);
+                alert(`Berjaya! ${lengths.length} saiz untuk ${tankId} telah dihantar. ✓`);
+                lengths = [];
+                tankSelect.value = '';
+                render();
             })
             .catch(err => {
-                alert("Error connecting to sheet server. Check connection or Apps Script URL config.");
                 console.error(err);
+                alert('Gagal menghantar. Semak sambungan internet dan cuba lagi. Data anda masih ada.');
             })
             .finally(() => {
                 btn.disabled = false;
-                btn.innerHTML = `<span>🚀 Submit Data to Master Sheet</span>`;
+                btn.innerHTML = '<span>🚀 Hantar / Submit</span>';
             });
         }
 
-        function cycleTheme() {
-            rumbleDevice(30);
-            document.body.classList.toggle('dark');
-        }
+        function toggleTheme() { vibrate(30); document.body.classList.toggle('dark'); }
+        function vibrate(d) { if ('vibrate' in navigator) navigator.vibrate(d); }
 
-        function rumbleDevice(d) {
-            if ('vibrate' in navigator) navigator.vibrate(d);
-        }
-
-        setInterval(() => {
-            const d = new Date();
-            document.getElementById('live-clock').textContent = d.toTimeString().substring(0, 5);
-        }, 1000);
-        document.getElementById('live-clock').textContent = new Date().toTimeString().substring(0, 5);
+        function tick() { document.getElementById('live-clock').textContent = new Date().toTimeString().substring(0, 5); }
+        tick(); setInterval(tick, 1000);
     </script>
 </body>
 </html>
